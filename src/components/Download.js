@@ -1,6 +1,7 @@
 import React from "react";
 import axios from "axios";
 import {Button, Form} from "react-bootstrap";
+import FileDownload from "js-file-download";
 
 class Download extends React.Component{
 
@@ -30,6 +31,7 @@ class Download extends React.Component{
         event.preventDefault();
 
         const URL_RETRIEVE = "http://localhost:8080/retrieve";
+        const URL_HTTP_RETREIVE = "http://localhost:8080/httpFileRetreive";
 
         //set the form data here
         //take id as key
@@ -40,16 +42,19 @@ class Download extends React.Component{
             this.state.fileId
         )
 
-        await axios.post(URL_RETRIEVE,formData)
-            .then(response => response.data)
-            .then( (data) => {
-                if(data != null){
-                    console.log("Data : " +data);
-                }
-                else{
-                    console.log("returned data is null.")
-                }
-            })
+        await axios.post(URL_HTTP_RETREIVE,formData,{responseType:'blob'})
+            .then( (response) => {
+                console.log("Data: "+response.data);
+
+                let headerline =  response.request.getResponseHeader('Content-Disposition') //get content disposition
+                let startFileNameIndex = headerline.indexOf('=')+1;  //set start at '=' sign of 'filename=' phrase
+                let endFileNameIndex = headerline.lastIndexOf('"');  //set the last index at the end of the content disposition
+                let filename =  headerline.substring(startFileNameIndex,endFileNameIndex);  //get the substring filename
+                console.log("Content disposition: "+ headerline);
+
+
+                FileDownload(response.data,filename+".pdf");
+            });
 
 
     }
